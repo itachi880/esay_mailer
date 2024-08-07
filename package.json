@@ -1,0 +1,21 @@
+{
+  "name": "esay_mailer",
+  "version": "1.0.0",
+  "description": "a package that help you inplement send emails fonctionality more esaly",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github/itachi880/esay_mailer.git"
+  },
+  "keywords": [
+    "easy",
+    "mailer",
+    "nodemailer",
+    "easy_mailer"
+  ],
+  "author": "itachi880",
+  "license": "ISC"
+}
