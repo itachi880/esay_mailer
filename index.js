@@ -37,7 +37,7 @@ const tls = require("tls");
  *   pass: "your-password"
  * });
  */
-module.exports = class Mailer {
+class Mailer {
   /**
    *object contains the default setting for the most used smtp servecis like [gmail, outlook] and more.
    */
@@ -145,6 +145,10 @@ module.exports = class Mailer {
     file = { mime_type: "", name: "", buffer: false },
     html = { STRING_CODE: "", DATA_TO_REPLACE: {}, SOURCE_WORD: "data" },
   }) {
+    if (!this.#user || !this.#pass)
+      throw new Error(
+        "you cant use this foncunality without entering your credentials (the only mode avaliabel is the sendFromAccount mode)"
+      );
     try {
       const boundary = "data";
       const data = [];
@@ -192,6 +196,64 @@ module.exports = class Mailer {
       this.#sendCommend("QUIT");
       return html || text;
     } catch (err) {
+      throw err;
+    }
+  }
+  /**
+   * Sends an email using specified sender credentials, supporting file attachments and HTML templates.
+   * This method allows sending an email from a different account without creating a new object.
+   *
+   * @param {object} options - The email and sender options.
+   * @param {string} options.user - The sender's email address.
+   * @param {string} options.pass - The sender's email password.
+   * @param {string} options.to - The recipient's email address.
+   * @param {string} options.subject - The subject of the email.
+   * @param {(string|undefined)} options.text - The body text of the email.
+   * @param {object} [options.file] - The file to attach to the email.
+   * @param {string} options.file.mime_type - The MIME type of the file.
+   * @param {string} options.file.name - The name of the file.
+   * @param {(Buffer|boolean)} options.file.buffer - The file buffer or `false` if there is no file.
+   * @param {object} [options.html] - The HTML content options.
+   * @param {string} options.html.STRING_CODE - The HTML source code.
+   * @param {object} options.html.DATA_TO_REPLACE - The keys that need to be replaced dynamically.
+   * @param {string} options.html.SOURCE_WORD - The keyword used to mark dynamic data (e.g., if "data" is used and the key is "name", the HTML implementation should be like "data.name"). The default is "data".
+   *
+   * @returns {this} - Returns the mailer instance to allow method chaining if the proccess compleated successfuly or throw error if not.
+   *
+   * @example
+   * await mailer.sendFrom({
+   *   user: 'sender@example.com',
+   *   pass: 'password',
+   *   to: 'recipient@example.com',
+   *   subject: 'Hello',
+   *   text: 'This is a test email.',
+   *   file: { mime_type: 'text/plain', name: 'test.txt', buffer: fileBuffer },
+   *   html: { STRING_CODE: htmlString, DATA_TO_REPLACE: { name: 'John' }, SOURCE_WORD: 'data' }
+   * });
+   */
+
+  async sendFromAccount({
+    user,
+    pass,
+    to,
+    subject,
+    text,
+    file = { mime_type: "", name: "", buffer: false },
+    html = { STRING_CODE: "", DATA_TO_REPLACE: {}, SOURCE_WORD: "data" },
+  }) {
+    let temp = { user: this.#user, pass: this.#pass };
+    this.#user = user;
+    this.#pass = pass;
+    try {
+      await this.sendEmail({ to, subject, text, file, html });
+      this.#user = temp.user;
+      this.#pass = temp.pass;
+      temp = null;
+      return this;
+    } catch (err) {
+      this.#user = temp.user;
+      this.#pass = temp.pass;
+      temp = null;
       throw err;
     }
   }
@@ -244,4 +306,39 @@ module.exports = class Mailer {
     });
     return { Compiled_String: page.join(""), replaced_words: words };
   }
-};
+  /**
+   * Updates the sender's email credentials for the mailer instance.
+   * This method allows you to change the email and password used for sending emails without creating a new object.
+   *
+   * @param {object} options - The new credentials.
+   * @param {string} [options.user] - The new sender's email address. If not provided, the current email will be retained.
+   * @param {string} [options.pass] - The new sender's email password. If not provided, the current password will be retained.
+   *
+   * @returns {this} - Returns the mailer instance to allow method chaining.
+   *
+   * @example
+   * mailer.updateCredentials({ user: 'newuser@example.com', pass: 'newpassword' });
+   */
+
+  updateCredentials({ user = this.#user, pass = this.#pass }) {
+    this.#user = user;
+    this.#pass = pass;
+    return this;
+  }
+  switchHostService({ host_service = this.#host_service }) {
+    this.#host_service = host_service;
+    return this;
+  }
+}
+module.exports = Mailer;
+let mail = new Mailer({ host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL });
+mail
+  .updateCredentials({
+    user: "jamaaoui.business@gmail.com",
+    pass: "frwu qfmk bfav yneo",
+  })
+  .sendEmail({
+    to: "badortiana880@gmail.com",
+    subject: "test creadetials updating ",
+    text: "test",
+  });
