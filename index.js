@@ -331,14 +331,3 @@ class Mailer {
   }
 }
 module.exports = Mailer;
-let mail = new Mailer({ host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL });
-mail
-  .updateCredentials({
-    user: "jamaaoui.business@gmail.com",
-    pass: "frwu qfmk bfav yneo",
-  })
-  .sendEmail({
-    to: "badortiana880@gmail.com",
-    subject: "test creadetials updating ",
-    text: "test",
-  });
