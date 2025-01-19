@@ -16,16 +16,16 @@ const tls = require("tls");
  * @param {string} options.user - The user's email address.
  * @param {string} options.pass - The user's email password.
  *
+ *  Example 1: Using Gmail configuration
  * @example
- * // Example 1: Using Gmail configuration
  * const gmailMailer = new Mailer({
  *   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
  *   user: "your-email@gmail.com",
  *   pass: "your-password"
  * });
  *
+ *  Example 2: Using costume configuration
  * @example
- * // Example 2: Using costume configuration
  * const costumeMailer = new Mailer({
  *   host_service: {      
  *    domain: "example.com",
@@ -138,13 +138,7 @@ class Mailer {
    * @param {string} options.html.SOURCE_WORD - The key word that have been used to marke the dynamic data like if it is "data" and the key is "name" the html inplementaion shold be like "data.name" and it is "data" by default.
    * @returns {(string|object|Error)}- return text if you don't attach a html page or a object that has the complied html file and the words thats replaced if you attach a html file or throw error if the proccess was faild.
    */
-  async sendEmail({
-    to,
-    subject,
-    text,
-    file = { mime_type: "", name: "", buffer: false },
-    html = { STRING_CODE: "", DATA_TO_REPLACE: {}, SOURCE_WORD: "data" },
-  }) {
+  async sendEmail({ to, subject, text, file, html }) {
     if (!this.#user || !this.#pass)
       throw new Error(
         "you cant use this foncunality without entering your credentials (the only mode avaliabel is the sendFromAccount mode)"
@@ -160,29 +154,23 @@ class Mailer {
       await this.#sendCommend(`MAIL FROM:<${this.#user}>`);
       await this.#sendCommend(`RCPT TO:<${to}>`);
       await this.#sendCommend(`DATA`);
-      html.Compiled = html.STRING_CODE.length > 0 ? {} : false;
       data.push(
         `Subject: ${subject}`,
         `MIME-Version: 1.0`,
         `Content-Type: multipart/mixed; boundary="${boundary}"`,
         "",
         `--${boundary}`,
-        `Content-Type: ${
-          html.STRING_CODE.length <= 0 ? "text/plain" : "text/html"
-        }; charset=utf-8`,
+        `Content-Type: ${!html ? "text/plain" : "text/html"}; charset=utf-8`,
         "",
-        html.STRING_CODE.length <= 0
+        !html
           ? text
-          : (() => {
-              html.Compiled = this.#HTMLCompile({
-                STRING_CODE: html.STRING_CODE,
-                DATA_TO_REPLACE: html.DATA_TO_REPLACE,
-                SOURCE_WORD: html.SOURCE_WORD,
-              });
-              return html.Compiled.Compiled_String;
-            })()
+          : this.#HTMLCompile({
+              STRING_CODE: html.STRING_CODE,
+              DATA_TO_REPLACE: html.DATA_TO_REPLACE,
+              SOURCE_WORD: html.SOURCE_WORD,
+            }).Compiled_String
       );
-      if (file.buffer)
+      if (file?.buffer) {
         data.push(
           `--${boundary}`,
           `Content-Type: ${file.mime_type}; name="${file.name}"`,
@@ -191,6 +179,7 @@ class Mailer {
           "",
           Buffer.from(file.buffer).toString("base64")
         );
+      }
       data.push(`--${boundary}--`, ".", "");
       await this.#sendCommend(data.join("\r\n"));
       this.#sendCommend("QUIT");
