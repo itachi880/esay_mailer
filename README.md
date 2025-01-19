@@ -13,13 +13,13 @@ This package provides a simple and robust solution for sending emails using vari
 To install the package, use npm:
 
 ```node js
-npm install easy_mailer
+npm install esay_mailer
 ```
 
 ## Usage
 
 ```node js
-const MailerClass = require("easy_mailer");
+const MailerClass = require("esay_mailer");
 const Mailer = new MailerClass(options);
 ```
 
@@ -30,7 +30,7 @@ You can create a Mailer instance using the default settings for popular SMTP ser
 #### Example 1: Using Gmail Configuration
 
 ```node js
-const Mailer = require("easy_mailer");
+const Mailer = require("esay_mailer");
 const gmailMailer = new Mailer({
   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
   user: "your-email@gmail.com",
@@ -85,7 +85,8 @@ const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
   html: {
-    STRING_CODE: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+    STRING_CODE:
+      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
     DATA_TO_REPLACE: { name: "John Doe" },
     SOURCE_WORD: "data",
   },
@@ -123,7 +124,8 @@ const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
   html: {
-    STRING_CODE: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+    STRING_CODE:
+      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
     DATA_TO_REPLACE: { name: "John Doe" },
     SOURCE_WORD: "data",
   },
@@ -157,7 +159,8 @@ const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
   html: {
-    STRING_CODE: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+    STRING_CODE:
+      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
     DATA_TO_REPLACE: { name: "John Doe" },
     SOURCE_WORD: "data",
   },
