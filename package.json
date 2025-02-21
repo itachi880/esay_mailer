@@ -1,6 +1,6 @@
 {
   "name": "esay_mailer",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "a package that help you inplement send emails fonctionality more esaly",
   "main": "index.js",
   "scripts": {

@@ -282,14 +282,15 @@ class Mailer {
     });
   }
   #HTMLCompile({ STRING_CODE, DATA_TO_REPLACE = {}, SOURCE_WORD = "data" }) {
-    let page = STRING_CODE.split(/(\s+|\}\{|\}{|}\{|<|>)/) || [];
+    let page = STRING_CODE.split(/(\s+|\}\{|\}{|}\{|<|>|=|")/) || [];
+    console.log(page);
     let words = [];
     page = page.map((word) => {
-      let index = word.indexOf(SOURCE_WORD + ".");
-      let word_obj = word.substring(index + SOURCE_WORD.length + 1);
-      if (index >= 0 && DATA_TO_REPLACE[word_obj]) {
+      const prefix = word.split(".");
+      console.log(prefix, DATA_TO_REPLACE[prefix[1]]);
+      if (prefix[0] == SOURCE_WORD && DATA_TO_REPLACE[prefix[1]]) {
         words.push(word);
-        return DATA_TO_REPLACE[word_obj];
+        return DATA_TO_REPLACE[prefix[1]];
       }
       return word;
     });
