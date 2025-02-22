@@ -107,7 +107,7 @@ class Mailer {
   #user;
   #pass;
   #connection;
-
+  #queue = [];
   constructor({
     host_service = {
       domain: "",
@@ -121,6 +121,21 @@ class Mailer {
     this.#host_service = host_service;
     this.#user = user;
     this.#pass = pass;
+  }
+  async sendEmail({ to, subject, text, file, html, log = false }) {
+    this.#queue.push({
+      to,
+      subject,
+      text,
+      file,
+      html,
+      log,
+    });
+    if (this.#queue.length > 1) return;
+    for (let i = 0; i < this.#queue.length; i++) {
+      await this.#sendEmail(this.#queue[i]);
+    }
+    this.#queue = [];
   }
   /**
    * Sends an email this methode support files attachment and html teamplate out of the box .
@@ -138,7 +153,7 @@ class Mailer {
    * @param {string} options.html.SOURCE_WORD - The key word that have been used to marke the dynamic data like if it is "data" and the key is "name" the html inplementaion shold be like "data.name" and it is "data" by default.
    * @returns {(string|object|Error)}- return text if you don't attach a html page or a object that has the complied html file and the words thats replaced if you attach a html file or throw error if the proccess was faild.
    */
-  async sendEmail({ to, subject, text, file, html }) {
+  async #sendEmail({ to, subject, text, file, html, log }) {
     if (!this.#user || !this.#pass)
       throw new Error(
         "you cant use this foncunality without entering your credentials (the only mode avaliabel is the sendFromAccount mode)"
@@ -147,13 +162,19 @@ class Mailer {
       const boundary = "data";
       const data = [];
       await this.#connect();
-      await this.#sendCommend(`EHLO ${this.#host_service.smtp_host}`);
-      await this.#sendCommend(`AUTH LOGIN`);
-      await this.#sendCommend(`${Buffer.from(this.#user).toString("base64")}`);
-      await this.#sendCommend(`${Buffer.from(this.#pass).toString("base64")}`);
-      await this.#sendCommend(`MAIL FROM:<${this.#user}>`);
-      await this.#sendCommend(`RCPT TO:<${to}>`);
-      await this.#sendCommend(`DATA`);
+      await this.#sendCommend(`EHLO ${this.#host_service.smtp_host}`, log);
+      await this.#sendCommend(`AUTH LOGIN`, log);
+      await this.#sendCommend(
+        `${Buffer.from(this.#user).toString("base64")}`,
+        log
+      );
+      await this.#sendCommend(
+        `${Buffer.from(this.#pass).toString("base64")}`,
+        log
+      );
+      await this.#sendCommend(`MAIL FROM:<${this.#user}>`, log);
+      await this.#sendCommend(`RCPT TO:<${to}>`, log);
+      await this.#sendCommend(`DATA`, log);
       data.push(
         `Subject: ${subject}`,
         `MIME-Version: 1.0`,
@@ -181,8 +202,9 @@ class Mailer {
         );
       }
       data.push(`--${boundary}--`, ".", "");
-      await this.#sendCommend(data.join("\r\n"));
-      this.#sendCommend("QUIT");
+      await this.#sendCommend(data.join("\r\n"), log);
+      await this.#sendCommend("QUIT", log);
+      this.#connection.end();
       return html || text;
     } catch (err) {
       throw err;
@@ -246,11 +268,14 @@ class Mailer {
       throw err;
     }
   }
-  #sendCommend(commend) {
+  #sendCommend(commend, log = false) {
     return new Promise((resolve, reject) => {
       this.#connection.write(commend + "\r\n", "utf8", () => {});
       this.#connection.once("data", (data) => {
+        this.#connection.removeAllListeners("error");
+        this.#connection.removeAllListeners("data");
         resolve(data.toString());
+        log && console.log(data.toString());
       });
       this.#connection.once("error", (err) => {
         reject(err);
