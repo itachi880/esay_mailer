@@ -283,7 +283,6 @@ class Mailer {
   }
   #HTMLCompile({ STRING_CODE, DATA_TO_REPLACE = {}, SOURCE_WORD = "data" }) {
     let page = STRING_CODE.split(/(\s+|\}\{|\}{|}\{|<|>|=|")/) || [];
-    console.log(page);
     let words = [];
     page = page.map((word) => {
       const prefix = word.split(".");
