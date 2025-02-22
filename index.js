@@ -286,7 +286,6 @@ class Mailer {
     let words = [];
     page = page.map((word) => {
       const prefix = word.split(".");
-      console.log(prefix, DATA_TO_REPLACE[prefix[1]]);
       if (prefix[0] == SOURCE_WORD && DATA_TO_REPLACE[prefix[1]]) {
         words.push(word);
         return DATA_TO_REPLACE[prefix[1]];
