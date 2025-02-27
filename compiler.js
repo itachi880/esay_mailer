@@ -71,6 +71,9 @@ function createTagTree(tag) {
   };
   return tags;
 }
+/**
+ * @deprecated - this is an experimental feature not stable to use not even an alpha version so use it with your own risk
+ */
 function HTMLCompile({ code = "" }) {
   const root = createTagTree("root");
 
@@ -99,4 +102,5 @@ function HTMLCompile({ code = "" }) {
   return domRendered.join(" ");
   return code;
 }
+
 module.exports = HTMLCompile;
