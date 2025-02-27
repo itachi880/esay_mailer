@@ -122,6 +122,21 @@ class Mailer {
     this.#user = user;
     this.#pass = pass;
   }
+  /**
+   * Sends an email this methode support files attachment and html teamplate out of the box .
+   * @param {object} options - The email options.
+   * @param {string} options.to - The recipient's email address.
+   * @param {string} options.subject - The subject of the email.
+   * @param {(string|undefined)} options.text - The body text of the email.
+   * @param {object} [options.file] - The file to attach to the email.
+   * @param {string} options.file.mime_type - The MIME type of the file.
+   * @param {string} options.file.name - The name of the file.
+   * @param {(Buffer|boolean)} options.file.buffer - The file buffer or false if there is no file.
+   * @param {object} [options.html] - The HTML content options.
+   * @param {string} options.html.STRING_CODE - The HTML source code.
+   * @param {object} options.html.DATA_TO_REPLACE - The keys that need to be replaced dynamically.
+   * @param {string} options.html.SOURCE_WORD - The key word that have been used to marke the dynamic data like if it is "data" and the key is "name" the html inplementaion shold be like "data.name" and it is "data" by default.
+   */
   async sendEmail({ to, subject, text, file, html, log = false }) {
     this.#queue.push({
       to,
