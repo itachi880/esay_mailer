@@ -32,6 +32,19 @@ const handlers = {
     node.childrens.forEach(constructHtml);
     ignore = false;
   },
+  /**
+   *
+   * @param {ReturnType<createTagTree>} node
+   */
+  for: (node) => {
+    if (ignore) return node.childrens.forEach(constructHtml);
+    const data = {
+      var: node.attrebuts.var.split("=")[1],
+      increment: node.attrebuts.increment,
+      condition: node.attrebuts.condition,
+    };
+    // handle loop
+  },
 };
 
 const domRendered = [];
