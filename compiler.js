@@ -1,9 +1,4 @@
-const types = {
-  HTML_TAG: "ht",
-  CONTENT: "content",
-  IF: "if",
-  FOR: "for",
-};
+let ignore = false;
 const SOURCE_WORD = "data";
 const DATA_TO_REPLACE = {
   t: true,
@@ -14,6 +9,7 @@ const handlers = {
    * @param {ReturnType<createTagTree>} node
    */
   if: (node) => {
+    if (ignore) return node.childrens.forEach(constructHtml);
     const parts = node.attrebuts.condition.split(" ");
     parts.forEach((part, i) => {
       if (
@@ -26,7 +22,16 @@ const handlers = {
     if (!eval(parts.join(" "))) return;
     node.childrens.forEach(constructHtml);
   },
-  ignore: (node) => {},
+  /**
+   *
+   * @param {ReturnType<createTagTree>} node
+   */
+  ignore: (node) => {
+    if (ignore) return node.childrens.forEach(constructHtml);
+    ignore = true;
+    node.childrens.forEach(constructHtml);
+    ignore = false;
+  },
 };
 
 const domRendered = [];
@@ -65,7 +70,6 @@ function createTagTree(tag) {
     });
   const tags = {
     name: parts[0],
-    type: types.HTML_TAG,
     childrens: [],
     attrebuts: attrebuts,
   };
@@ -100,7 +104,6 @@ function HTMLCompile({ code = "" }) {
   }
   root.childrens.forEach(constructHtml);
   return domRendered.join(" ");
-  return code;
 }
 
 module.exports = HTMLCompile;
