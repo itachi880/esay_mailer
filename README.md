@@ -23,6 +23,29 @@ const MailerClass = require("esay_mailer");
 const Mailer = new MailerClass(options);
 ```
 
+### TypeScript Usage
+
+If you're using TypeScript, the package ships a declaration file (`index.d.ts`) so you can import and get proper types. Because this package uses a CommonJS `export =` style, import it like this:
+
+```ts
+import Mailer = require('esay_mailer');
+
+const mailer = new Mailer({
+  host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
+  user: 'your-email@gmail.com',
+  pass: 'your-password',
+});
+
+// typed send example
+const options: Mailer.SendEmailOptions = {
+  to: 'recipient@example.com',
+  subject: 'Hello from TypeScript',
+  text: 'This is a typed send',
+};
+
+await mailer.sendEmail(options);
+```
+
 ### Creating a Mailer Instance
 
 You can create a Mailer instance using the default settings for popular SMTP services or provide your own custom configuration.
@@ -107,20 +130,18 @@ gmailMailer
   });
 ```
 
-> You can send an email from deferent credentials than the one's you declare in the instance creation this mean that you can let the `user` and `pass` empty if you want to use the package with deferent accounts each time.
+> To send using different credentials at runtime, call `updateCredentials({ user, pass })` on the Mailer instance, then call `sendEmail`. `sendEmail` uses the instance's credentials.
 
-#### Example 1: Sending an HTML Email with deferent credentials
+#### Example: Sending an email after changing credentials
 
 ```node js
-const Mailer = require("easy_mailer");
+const Mailer = require("esay_mailer");
 const gmailMailer = new Mailer({
   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
   user: "your-email@gmail.com",
   pass: "your-password",
 });
 const options = {
-  user: "deferent-email@gmail.com",
-  pass: "deferent-password",
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
   html: {
@@ -136,26 +157,26 @@ const options = {
   },
 };
 
+// change the credentials on the instance, then send
 gmailMailer
-  .sendFromAccount(options)
-  .then((mailer) => {
-    // to some logic after sending the email
+  .updateCredentials({ user: "different-email@gmail.com", pass: "different-password" })
+  .sendEmail(options)
+  .then(() => {
+    // logic after sending
   })
   .catch((error) => {
     console.error("Error sending email:", error);
   });
 ```
 
-#### Example 2: Sending an HTML Email without entering the default credentials
+#### Example: Create Mailer without default credentials and send after setting credentials
 
 ```node js
-const Mailer = require("easy_mailer");
+const Mailer = require("esay_mailer");
 const gmailMailer = new Mailer({
   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
 });
 const options = {
-  user: "deferent-email@gmail.com",
-  pass: "deferent-password",
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
   html: {
@@ -171,9 +192,11 @@ const options = {
   },
 };
 
+// set credentials then send
 gmailMailer
-  .sendFromAccount(options)
-  .then((mailer) => {
+  .updateCredentials({ user: "different-email@gmail.com", pass: "different-password" })
+  .sendEmail(options)
+  .then(() => {
     // to some logic after sending the email
   })
   .catch((error) => {

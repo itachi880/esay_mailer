@@ -30,7 +30,7 @@ const tls = require("tls");
  *   host_service: {      
  *    domain: "example.com",
       smtp_host: "smtp.example.com",
-      smtp_port: 587,
+      smtp_port: 587,   // - its deprecated to use the smtp unsecure port
       secure_smtp_port: 465
       },
  *   user: "your-email@example.com",
@@ -39,7 +39,7 @@ const tls = require("tls");
  */
 class Mailer {
   /**
-   *object contains the default setting for the most used smtp servecis like [gmail, outlook] and more.
+   * - object contains the default setting for the most used smtp servecis like [gmail, outlook] and more.
    */
   static HOSTS_DEFAULT_LIST = {
     GMAIL: {
@@ -112,8 +112,8 @@ class Mailer {
     host_service = {
       domain: "",
       smtp_host: "",
-      smtp_port: "",
-      secure_smtp_port: "",
+      smtp_port: 0,
+      secure_smtp_port: 0,
     },
     user,
     pass,
@@ -145,8 +145,10 @@ class Mailer {
       file,
       html,
       log,
+      user: this.#user,
+      pass: this.#pass,
     });
-    if (this.#queue.length > 1) return;
+    if (this.#queue.length < 1) return;
     for (let i = 0; i < this.#queue.length; i++) {
       await this.#sendEmail(this.#queue[i]);
     }
@@ -162,14 +164,13 @@ class Mailer {
    * @param {string} options.file.mime_type - The MIME type of the file.
    * @param {string} options.file.name - The name of the file.
    * @param {(Buffer|boolean)} options.file.buffer - The file buffer or false if there is no file.
-   * @param {object} [options.html] - The HTML content options.
-   * @param {string} options.html.STRING_CODE - The HTML source code.
-   * @param {object} options.html.DATA_TO_REPLACE - The keys that need to be replaced dynamically.
-   * @param {string} options.html.SOURCE_WORD - The key word that have been used to marke the dynamic data like if it is "data" and the key is "name" the html inplementaion shold be like "data.name" and it is "data" by default.
+   * @param {string} options.html - The HTML content options.
+   * @param {string} options.user - The HTML content options.
+   * @param {string} options.pass - The HTML content options.
    * @returns {(string|object|Error)}- return text if you don't attach a html page or a object that has the complied html file and the words thats replaced if you attach a html file or throw error if the proccess was faild.
    */
-  async #sendEmail({ to, subject, text, file, html, log }) {
-    if (!this.#user || !this.#pass)
+  async #sendEmail({ to, subject, text, file, html, log, user, pass }) {
+    if (!user || !pass)
       throw new Error(
         "you cant use this foncunality without entering your credentials (the only mode avaliabel is the sendFromAccount mode)"
       );
@@ -179,15 +180,12 @@ class Mailer {
       await this.#connect();
       await this.#sendCommend(`EHLO ${this.#host_service.smtp_host}`, log);
       await this.#sendCommend(`AUTH LOGIN`, log);
-      await this.#sendCommend(
-        `${Buffer.from(this.#user).toString("base64")}`,
-        log
-      );
+      await this.#sendCommend(`${Buffer.from(user).toString("base64")}`, log);
       await this.#sendCommend(
         `${Buffer.from(this.#pass).toString("base64")}`,
         log
       );
-      await this.#sendCommend(`MAIL FROM:<${this.#user}>`, log);
+      await this.#sendCommend(`MAIL FROM:<${user}>`, log);
       await this.#sendCommend(`RCPT TO:<${to}>`, log);
       await this.#sendCommend(`DATA`, log);
       data.push(
@@ -198,13 +196,7 @@ class Mailer {
         `--${boundary}`,
         `Content-Type: ${!html ? "text/plain" : "text/html"}; charset=utf-8`,
         "",
-        !html
-          ? text
-          : this.#HTMLCompile({
-              STRING_CODE: html.STRING_CODE,
-              DATA_TO_REPLACE: html.DATA_TO_REPLACE,
-              SOURCE_WORD: html.SOURCE_WORD,
-            }).Compiled_String
+        !html ? text : html
       );
       if (file?.buffer) {
         data.push(
@@ -226,63 +218,11 @@ class Mailer {
     }
   }
   /**
-   * Sends an email using specified sender credentials, supporting file attachments and HTML templates.
-   * This method allows sending an email from a different account without creating a new object.
    *
-   * @param {object} options - The email and sender options.
-   * @param {string} options.user - The sender's email address.
-   * @param {string} options.pass - The sender's email password.
-   * @param {string} options.to - The recipient's email address.
-   * @param {string} options.subject - The subject of the email.
-   * @param {(string|undefined)} options.text - The body text of the email.
-   * @param {object} [options.file] - The file to attach to the email.
-   * @param {string} options.file.mime_type - The MIME type of the file.
-   * @param {string} options.file.name - The name of the file.
-   * @param {(Buffer|boolean)} options.file.buffer - The file buffer or `false` if there is no file.
-   * @param {object} [options.html] - The HTML content options.
-   * @param {string} options.html.STRING_CODE - The HTML source code.
-   * @param {object} options.html.DATA_TO_REPLACE - The keys that need to be replaced dynamically.
-   * @param {string} options.html.SOURCE_WORD - The keyword used to mark dynamic data (e.g., if "data" is used and the key is "name", the HTML implementation should be like "data.name"). The default is "data".
-   *
-   * @returns {this} - Returns the mailer instance to allow method chaining if the proccess compleated successfuly or throw error if not.
-   *
-   * @example
-   * await mailer.sendFrom({
-   *   user: 'sender@example.com',
-   *   pass: 'password',
-   *   to: 'recipient@example.com',
-   *   subject: 'Hello',
-   *   text: 'This is a test email.',
-   *   file: { mime_type: 'text/plain', name: 'test.txt', buffer: fileBuffer },
-   *   html: { STRING_CODE: htmlString, DATA_TO_REPLACE: { name: 'John' }, SOURCE_WORD: 'data' }
-   * });
+   * @param {string} commend
+   * @param {boolean} log - default `false`
+   * @returns
    */
-
-  async sendFromAccount({
-    user,
-    pass,
-    to,
-    subject,
-    text,
-    file = { mime_type: "", name: "", buffer: false },
-    html = { STRING_CODE: "", DATA_TO_REPLACE: {}, SOURCE_WORD: "data" },
-  }) {
-    let temp = { user: this.#user, pass: this.#pass };
-    this.#user = user;
-    this.#pass = pass;
-    try {
-      await this.sendEmail({ to, subject, text, file, html });
-      this.#user = temp.user;
-      this.#pass = temp.pass;
-      temp = null;
-      return this;
-    } catch (err) {
-      this.#user = temp.user;
-      this.#pass = temp.pass;
-      temp = null;
-      throw err;
-    }
-  }
   #sendCommend(commend, log = false) {
     return new Promise((resolve, reject) => {
       this.#connection.write(commend + "\r\n", "utf8", () => {});
@@ -321,19 +261,7 @@ class Mailer {
       );
     });
   }
-  #HTMLCompile({ STRING_CODE, DATA_TO_REPLACE = {}, SOURCE_WORD = "data" }) {
-    let page = STRING_CODE.split(/(\s+|\}\{|\}{|}\{|<|>|=|")/) || [];
-    let words = [];
-    page = page.map((word) => {
-      const prefix = word.split(".");
-      if (prefix[0] == SOURCE_WORD && DATA_TO_REPLACE[prefix[1]]) {
-        words.push(word);
-        return DATA_TO_REPLACE[prefix[1]];
-      }
-      return word;
-    });
-    return { Compiled_String: page.join(""), replaced_words: words };
-  }
+
   /**
    * Updates the sender's email credentials for the mailer instance.
    * This method allows you to change the email and password used for sending emails without creating a new object.

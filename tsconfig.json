@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "target": "ES2019",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "include": ["index.d.ts", "index.js"]
+}

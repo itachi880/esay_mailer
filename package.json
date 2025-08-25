@@ -1,11 +1,10 @@
 {
   "name": "esay_mailer",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "a package that help you inplement send emails fonctionality more esaly",
   "main": "index.js",
-  "scripts": {
-    "test": "node ./tests/teamplateEngine/compiler.test.js"
-  },
+  "types": "index.d.ts",
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "https://github/itachi880/esay_mailer.git"
