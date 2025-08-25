@@ -4,7 +4,7 @@ This package provides a simple and robust solution for sending emails using vari
 
 ## Features
 
-- Send emails with text or HTML content with built-in teamplate
+- Send emails with text or HTML content 
 - Attach files to emails
 - Supports most popular SMTP services like (Gmail, Outlook, Yahoo, etc.) without any extra configurations
 
@@ -28,7 +28,7 @@ const Mailer = new MailerClass(options);
 If you're using TypeScript, the package ships a declaration file (`index.d.ts`) so you can import and get proper types. Because this package uses a CommonJS `export =` style, import it like this:
 
 ```ts
-import Mailer = require('esay_mailer');
+import Mailer from "esay_mailer";
 
 const mailer = new Mailer({
   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
@@ -107,12 +107,7 @@ gmailMailer
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: {
-    STRING_CODE:
-      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
-    DATA_TO_REPLACE: { name: "John Doe" },
-    SOURCE_WORD: "data",
-  },
+  html: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -144,12 +139,7 @@ const gmailMailer = new Mailer({
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: {
-    STRING_CODE:
-      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
-    DATA_TO_REPLACE: { name: "John Doe" },
-    SOURCE_WORD: "data",
-  },
+  html: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -179,12 +169,7 @@ const gmailMailer = new Mailer({
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: {
-    STRING_CODE:
-      "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
-    DATA_TO_REPLACE: { name: "John Doe" },
-    SOURCE_WORD: "data",
-  },
+  html:  "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -272,32 +257,6 @@ An object containing the default settings for the most used SMTP services like G
 - **smtp_port**: `number` - The SMTP port (e.g., 587).
 - **secure_smtp_port**: `number` - The secure SMTP port (e.g., 465).
 
-#### built-in HTML teampleat
-
-we develop a simple html teampleat to help you change the content dinamicly for the reciver it goes like this
-
-```html
-<div>hello data.name your request for data.request is data.requeststatus</div>
-```
-
-```node js
-const options = {
-  to: "recipient@example.com",
-  subject: "Test Email with Attachment",
-  html: {
-    STRING_CODE: fs.readFileSync(path / to / htmlfile, "utf-8"),
-    DATA_TO_REPLACE: {
-      name: "John Doe",
-      request: "by a phone",
-      requeststatus: "compleated successfuly",
-    },
-    SOURCE_WORD: "data",
-  },
-};
-mailer.sendEmail(options);
-```
-
-We rely on a word you give us, `SOURCE_WORD`, and the schema to change any data in HTML to the corresponding data from the server or the database. The format is `SOURCE_WORD.key`, where the key is from the **DATA_TO_REPLACE** `object`.
 
 ## License
 
