@@ -23,5 +23,8 @@
     "@babel/preset-react": "^7.27.1",
     "preact": "^10.27.1",
     "preact-render-to-string": "^6.6.1"
+  },
+  "bin": {
+    "esay-mailer": "./cli.js"
   }
 }

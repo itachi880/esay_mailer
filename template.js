@@ -1,29 +1,35 @@
-import { readFile, stat, writeFile } from "fs/promises";
-import { transformAsync } from "@babel/core";
+import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import render from "preact-render-to-string";
+import { Compile } from "./Compiler.js";
+import {
+  forceFreshImport,
+  preCompile,
+  forceFreshCompilation,
+} from "./constants.js";
+import path from "path";
 // for chachinh on memory
 const moduleCache = {};
 const moduleLastUpdates = {};
-export const forceFreshImport = false;
-export const forceFreshCompilation = false;
-export const preCompile = true;
 
-export async function renderTemplate(filePath, props = {}, preCompile = false) {
+export async function renderTemplate(filePath, props = {}) {
   const filePathAsArray = filePath.split("/");
   const compiledFilePath =
-    "./" + filePathAsArray[filePathAsArray.length - 1].split(".")[0] + ".mjs";
-
+    "./" +
+    path.join(
+      "compiled-Templates",
+      filePathAsArray[filePathAsArray.length - 1].split(".")[0] + ".mjs"
+    );
+  console.log(compiledFilePath);
   const { code, compiledComponent } = await getCachedCompilation(
     filePath,
-    compiledFilePath,
-    preCompile
+    compiledFilePath
   );
   if (!code) {
     return render(compiledComponent(props));
   }
   const compiledComponentCode = await Compile(code);
   try {
-    await saveFile(compiledFilePath, compiledComponentCode);
+    await writeNestedFile(compiledFilePath, compiledComponentCode);
     moduleLastUpdates[compiledFilePath] = new Date();
   } catch (e) {
     console.error("cannot save compiled jsx code for :", filePath);
@@ -31,23 +37,8 @@ export async function renderTemplate(filePath, props = {}, preCompile = false) {
   const compiledComponentFromCode = await importCached(compiledFilePath);
   return render(compiledComponentFromCode(props));
 }
-async function saveFile(filePath, content) {
-  await writeFile(filePath, content, "utf-8"); // utf-8 ensures it's a text file
-}
-async function Compile(code = "") {
-  const { code: compiled } = await transformAsync(code, {
-    presets: [
-      ["@babel/preset-react", { runtime: "automatic", importSource: "preact" }],
-    ],
-  });
-  return compiled;
-}
 
-async function getCachedCompilation(
-  originalPathForFile,
-  cachePathForFile,
-  preCompile = false
-) {
+async function getCachedCompilation(originalPathForFile, cachePathForFile) {
   try {
     if (preCompile) {
       return {
@@ -84,4 +75,12 @@ async function importCached(compiledFilePath) {
   const { default: Component } = await import(compiledFilePath);
   moduleCache[compiledFilePath] = Component;
   return Component;
+}
+async function writeNestedFile(filePath, content) {
+  // 1. Ensure the directory exists
+  const dir = path.dirname(filePath);
+  await mkdir(dir, { recursive: true });
+
+  // 2. Write the file
+  await writeFile(filePath, content, "utf-8");
 }

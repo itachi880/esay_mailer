@@ -55,4 +55,4 @@ declare namespace Mailer {
   }
 }
 
-export = Mailer;
+export default Mailer;
