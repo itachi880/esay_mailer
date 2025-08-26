@@ -1,4 +1,4 @@
-const tls = require("tls");
+import tls from "tls";
 /**
  * @typedef {Object} HostService
  * @property {string} domain - The email domain (e.g., "gmail.com").
@@ -286,4 +286,4 @@ class Mailer {
     return this;
   }
 }
-module.exports = Mailer;
+export default Mailer;
