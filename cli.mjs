@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { exec as execCb } from "child_process";
 import { promisify } from "util";
-import { Compile } from "./Compiler.js";
+import { Compile } from "./Compiler.mjs";
 
 const exec = promisify(execCb);
 const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +46,14 @@ async function precompile(templatesDir) {
 
     console.log("✔", file, "→", compiledPath);
   }
-
+  await writeFile(
+    path.join(__dirname, "constants.mjs"),
+    `
+export const forceFreshImport = false;
+export const forceFreshCompilation = false;
+export const preCompile = true;
+  `
+  );
   console.log("✅ Precompile finished");
 }
 
@@ -58,6 +65,9 @@ async function optimize() {
 
   delete packageJson.dependencies["@babel/core"];
   delete packageJson.dependencies["@babel/preset-react"];
+  packageJson.bundledDependencies = packageJson.bundledDependencies.filter(
+    (e) => e != "@babel/preset-react" && e != "@babel/core"
+  );
 
   await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
@@ -71,7 +81,7 @@ async function optimize() {
   await exec(`cd ${__dirname} && npm i`);
 
   await writeFile(
-    path.join(__dirname, "Compiler.js"),
+    path.join(__dirname, "Compiler.mjs"),
     `
 export async function Compile(code = "") {
   console.warn(

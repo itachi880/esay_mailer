@@ -1,86 +1,110 @@
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import render from "preact-render-to-string";
-import { Compile } from "./Compiler.js";
+import { Compile } from "./Compiler.mjs";
 import {
   forceFreshImport,
   preCompile,
   forceFreshCompilation,
-} from "./constants.js";
+} from "./constants.mjs";
 import path from "path";
-// for chachinh on memory
+import { fileURLToPath, pathToFileURL } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Caches for compiled modules
 const moduleCache = {};
 const moduleLastUpdates = {};
 
+/**
+ * Render a JSX template file with props.
+ */
 export async function renderTemplate(filePath, props = {}) {
-  const filePathAsArray = filePath.split("/");
-  const compiledFilePath =
-    "./" +
-    path.join(
-      "compiled-Templates",
-      filePathAsArray[filePathAsArray.length - 1].split(".")[0] + ".mjs"
-    );
-  console.log(compiledFilePath);
+  const fileName = path.basename(filePath, path.extname(filePath));
+  const compiledFilePath = path.join(
+    __dirname,
+    "compiled-Templates",
+    `${fileName}.mjs`
+  );
+
   const { code, compiledComponent } = await getCachedCompilation(
     filePath,
     compiledFilePath
   );
+
   if (!code) {
+    // Already compiled
     return render(compiledComponent(props));
   }
+
+  // Compile fresh code
   const compiledComponentCode = await Compile(code);
   try {
     await writeNestedFile(compiledFilePath, compiledComponentCode);
     moduleLastUpdates[compiledFilePath] = new Date();
   } catch (e) {
-    console.error("cannot save compiled jsx code for :", filePath);
+    console.error("Cannot save compiled JSX code for:", filePath, e);
   }
+
   const compiledComponentFromCode = await importCached(compiledFilePath);
   return render(compiledComponentFromCode(props));
 }
 
-async function getCachedCompilation(originalPathForFile, cachePathForFile) {
+/**
+ * Check cache and decide whether to recompile
+ */
+async function getCachedCompilation(originalPath, cachePath) {
   try {
     if (preCompile) {
       return {
         code: null,
-        compiledComponent: await importCached(cachePathForFile),
+        compiledComponent: await importCached(cachePath),
       };
     }
+
     const metadataOfCache =
-      moduleLastUpdates[cachePathForFile] || (await stat(cachePathForFile));
-    moduleLastUpdates[cachePathForFile] = metadataOfCache;
-    const metadataOfOriginal = await stat(originalPathForFile);
+      moduleLastUpdates[cachePath] || (await stat(cachePath));
+    moduleLastUpdates[cachePath] = metadataOfCache;
+    const metadataOfOriginal = await stat(originalPath);
+
     if (
       metadataOfOriginal.mtime.getTime() < metadataOfCache.mtime.getTime() &&
       !forceFreshCompilation
     ) {
-      const compiledComponent = await importCached(cachePathForFile);
-      return {
-        code: null,
-        compiledComponent,
-      };
+      const compiledComponent = await importCached(cachePath);
+      return { code: null, compiledComponent };
     }
+
     throw "re-compilation needed";
   } catch (e) {
     return {
-      code: await readFile(originalPathForFile, "utf-8"),
+      code: await readFile(originalPath, "utf-8"),
       compiledComponent: null,
     };
   }
 }
 
+/**
+ * Import a compiled component safely with caching
+ */
 async function importCached(compiledFilePath) {
-  if (moduleCache[compiledFilePath] && !forceFreshImport)
+  if (moduleCache[compiledFilePath] && !forceFreshImport) {
     return moduleCache[compiledFilePath];
-  const { default: Component } = await import(compiledFilePath);
+  }
+
+  // Convert path to file:// URL for dynamic import
+  const fileUrl = pathToFileURL(path.resolve(compiledFilePath)).href;
+  const { default: Component } = await import(fileUrl);
+
   moduleCache[compiledFilePath] = Component;
   return Component;
 }
+
+/**
+ * Write file ensuring nested directories exist
+ */
 async function writeNestedFile(filePath, content) {
-  // 1. Ensure the directory exists
   const dir = path.dirname(filePath);
   await mkdir(dir, { recursive: true });
-
-  // 2. Write the file
   await writeFile(filePath, content, "utf-8");
 }
