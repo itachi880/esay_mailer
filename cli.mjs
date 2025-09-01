@@ -2,7 +2,7 @@
 
 import { readdir, readFile, writeFile, mkdir, rm } from "fs/promises";
 import path from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { fileURLToPath } from "url";
 import { exec as execCb } from "child_process";
 import { promisify } from "util";
 import { Compile } from "./Compiler.mjs";
@@ -85,7 +85,7 @@ async function optimize() {
     `
 export async function Compile(code = "") {
   console.warn(
-    "⚠ Templates already precompiled. If you add new templates, run 'npx easy_mailer precompile <dir>'"
+    "⚠ Templates already precompiled. If you add new templates, run 'npx esay_mailer precompile <dir>'"
   );
   return code;
 }
@@ -98,7 +98,7 @@ export async function Compile(code = "") {
 async function restore() {
   console.log("Restoring package...");
   await exec(
-    `cd ${__dirname} && npm uninstall easy_mailer && npm i easy_mailer`
+    `cd ${__dirname} && npm uninstall esay_mailer && npm i esay_mailer`
   );
   console.log("✅ Restore finished");
 }
@@ -134,16 +134,16 @@ async function main() {
 Easy Mailer CLI - Usage
 
 Commands:
-  npx easy_mailer precompile <templates-dir>
+  npx esay_mailer precompile <templates-dir>
       Precompile all .jsx templates for performence (for production)
 
-  npx easy_mailer optimize
+  npx esay_mailer optimize
       Remove Babel dependencies and shrink package size (for production)
 
-  npx easy_mailer restore
+  npx esay_mailer restore
       fix any wired issues by focing reinstalation of the package
 
-  npx easy_mailer build <templates-dir>
+  npx esay_mailer build <templates-dir>
       Precompile + optimize in one step
 `);
   }
