@@ -1,6 +1,6 @@
 # esay_mailer Package
 
-This package provides a simple and robust solution for sending emails using various SMTP services. It supports file attachments, HTML templates, and JSX template compilation out of the box.
+This package provides a simple and robust solution for sending emails using various SMTP services. It supports file attachments, HTML content, and JSX template compilation out of the box.
 
 ## Features
 
@@ -10,7 +10,7 @@ This package provides a simple and robust solution for sending emails using vari
 - **JSX Template Support** - Write email templates using JSX syntax with Preact
 - **Template Compilation** - Compile JSX templates to optimized JavaScript for production
 - **CLI Tools** - Command-line interface for template precompilation and optimization
-- **Email Queue System** - Built-in queuing for batch email sending
+- **Basic Email Queue System** - Simple queuing for sequential email sending
 - **TypeScript Support** - Full TypeScript definitions included
 
 ## Installation
@@ -35,7 +35,7 @@ const mailer = new Mailer(options);
 If you're using TypeScript, the package ships a declaration file (`index.d.ts`) so you can import and get proper types. Because this package uses a CommonJS `export =` style, import it like this:
 
 ```ts
-import Mailer from "esay_mailer";
+import Mailer = require("esay_mailer");
 
 const mailer = new Mailer({
   host_service: Mailer.HOSTS_DEFAULT_LIST.GMAIL,
@@ -106,7 +106,7 @@ gmailMailer
   });
 ```
 
-> The `sendEmail` method returns a Promise that resolves when the email is successfully sent. The method uses a queue system for better reliability.
+> The `sendEmail` method returns a Promise that resolves when the email is successfully sent. The method uses a simple queue system for sequential processing.
 
 #### Example 2: Sending an HTML Email with Attachment
 
@@ -114,7 +114,7 @@ gmailMailer
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+  html: "<p>Hello, this is a test email!</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -132,22 +132,6 @@ gmailMailer
   });
 ```
 
-#### Example 3: Sending HTML Email with Template Data Replacement
-
-```javascript
-const options = {
-  to: "recipient@example.com",
-  subject: "Welcome Email",
-  html: {
-    STRING_CODE: "<p>Hello data.name, welcome to data.company!</p>",
-    DATA_TO_REPLACE: { name: "John Doe", company: "Acme Corp" },
-    SOURCE_WORD: "data", // optional, defaults to "data"
-  },
-};
-
-await gmailMailer.sendEmail(options);
-```
-
 > To send using different credentials at runtime, call `updateCredentials({ user, pass })` on the Mailer instance, then call `sendEmail`. `sendEmail` uses the instance's credentials.
 
 #### Example: Sending an email after changing credentials
@@ -162,7 +146,7 @@ const gmailMailer = new Mailer({
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+  html: "<p>Hello, this is a test email!</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -195,7 +179,7 @@ const gmailMailer = new Mailer({
 const options = {
   to: "recipient@example.com",
   subject: "Test Email with Attachment",
-  html: "<p>Hello, this is a test email!</p><p>Replace this: data.name</p>",
+  html: "<p>Hello, this is a test email!</p>",
   file: {
     mime_type: "application/pdf",
     name: "test.pdf",
@@ -248,7 +232,7 @@ mailer
 
 ## JSX Templates
 
-> The package now supports JSX templates using Preact for creating dynamic HTML emails with a React-like syntax.
+> The package supports JSX templates using Preact for creating dynamic HTML emails with a React-like syntax.
 
 ### Creating JSX Templates
 
@@ -340,7 +324,7 @@ npx esay_mailer build ./email-templates
 
 ## Email Queue System
 
-> The package includes a built-in email queue system that automatically handles batch email sending and provides better reliability.
+> The package includes a basic email queue system that processes emails sequentially for better reliability.
 
 ### How the Queue Works
 
@@ -370,7 +354,6 @@ await gmailMailer.sendEmail({
 - **Sequential Processing**: Emails are sent one at a time to avoid overwhelming SMTP servers
 - **Error Isolation**: If one email fails, others in the queue continue processing
 - **Memory Management**: The queue is automatically cleared after processing
-- **Rate Limiting**: Built-in protection against sending emails too quickly
 
 ### Debugging with Logging
 
@@ -409,10 +392,7 @@ await gmailMailer.sendEmail(options);
     - **mime_type**: `string` - The MIME type of the file.
     - **name**: `string` - The name of the file.
     - **buffer**: `Buffer|boolean` - The file buffer or false if there is no file.
-  - **html**: `string|Object` (optional) - The HTML content. Can be a plain HTML string or an object with template options.
-    - **STRING_CODE**: `string` - The HTML source code.
-    - **DATA_TO_REPLACE**: `Object` - The keys that need to be replaced dynamically.
-    - **SOURCE_WORD**: `string` (optional) - The keyword used to mark dynamic data (default is "data").
+  - **html**: `string` (optional) - The HTML content as a string.
   - **log**: `boolean` (optional) - Enable logging for debugging (default: false).
 
 - **Returns**: `Promise<void>` - Resolves when the email is successfully sent or rejects with an error.
